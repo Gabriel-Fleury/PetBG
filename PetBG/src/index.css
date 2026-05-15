@@ -1,0 +1,364 @@
+/* Importação das fontes (Google Fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap');
+
+
+:root {
+  /* Paleta de Cores */
+  --preto-maximo: #1d1d1d;
+  --cinza-escuro: #7f7f7f;
+  --cinza-borda: #BBBBBB;
+  --cor-fundo: #f1f1f1;
+  
+  /* Cores dos Cards de Animais */
+  --card-perdidos: #EF3C3C;
+  --card-encontrados: #FFB703;
+  --card-doacoes: #48AA28;
+}
+
+
+body {
+  background-color: var(--cor-fundo);
+  color: var(--preto-maximo);
+  font-family: 'Roboto', sans-serif; /* Texto do corpo */
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Montserrat', sans-serif; /* Títulos */
+  color: var(--preto-maximo);
+}
+
+.nome-da-pagina {
+  font-family: 'Fredoka', sans-serif; /* Nome da página */
+  font-weight: 600;
+}
+
+.card {
+  background: #FFFFFF;
+  border: 1px solid var(--cinza-borda);
+  border-radius: 8px;
+  padding: 15px;
+  transition: transform 0.2s;
+}
+
+/* Variações por tipo */
+.card-perdido {
+  border-top: 5px solid var(--card-perdidos);
+}
+
+.card-encontrado {
+  border-top: 5px solid var(--card-encontrados);
+}
+
+.card-doacao {
+  border-top: 5px solid var(--card-doacoes);
+}
+
+/* Exemplo de botão ou detalhe dentro do card */
+.btn-perdido { background-color: var(--card-perdidos); color: white; border: none; padding: 10px; border-radius: 4px; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.grid-container {
+  display: grid;
+  /* Cria colunas de no mínimo 250px, distribuindo o espaço */
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px; /* Espaço entre os cards */
+  margin-top: 30px;
+}
+
+.tag {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.filtros {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.filtros button {
+  padding: 8px 16px;
+  border: 1px solid var(--cinza-borda);
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+  transition: 0.3s;
+}
+
+.filtros button:hover {
+  background: var(--cinza-escuro);
+  color: white;
+}
+
+/* Botão Flutuante */
+.fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--preto-maximo);
+  color: white;
+  font-size: 30px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 100;
+  transition: transform 0.2s;
+}
+
+.fab:hover { transform: scale(1.1); }
+
+/* Overlay com Desfoque */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px); /* O segredo do desfoque */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Card do Modal */
+.modal-card {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.btn-fechar {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+/* Botões de Seleção de Tipo */
+.selecao-tipo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-tipo {
+  padding: 15px;
+  border: 1px solid var(--cinza-borda);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-tipo.perdido:hover { background: var(--card-perdidos); color: white; }
+.btn-tipo.encontrado:hover { background: var(--card-encontrados); color: white; }
+.btn-tipo.doacao:hover { background: var(--card-doacoes); color: white; }
+
+/* Estilo do Formulário no Modal */
+.form-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-modal input, .form-modal textarea {
+  padding: 12px;
+  border: 1px solid var(--cinza-borda);
+  border-radius: 6px;
+}
+
+.btn-enviar {
+  background: var(--preto-maximo);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-voltar {
+  background: none;
+  border: none;
+  color: var(--cinza-escuro);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.aviso-local {
+  font-size: 0.85rem;
+  color: var(--card-perdidos);
+  font-weight: bold;
+  margin: 10px 0 5px 0;
+  font-style: italic;
+}
+
+.area-local {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+
+.row input {
+  flex: 1;
+  width: 100%;
+}
+
+.label-foto {
+  font-size: 0.9rem;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.card-foto-placeholder {
+  width: 100%;
+  height: 150px;
+  background: #ccc;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.form-modal textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.card-foto {
+  width: 100%;
+  height: 200px;
+  object-fit: cover; /* Garante que a foto não fique esticada */
+}
+
+.local-info {
+  font-size: 0.85rem;
+  color: var(--cinza-escuro);
+  margin-bottom: 15px;
+}
+
+.btn-whatsapp {
+  display: block;
+  text-align: center;
+  background-color: #25D366; /* Verde do WhatsApp */
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.btn-whatsapp:hover {
+  background-color: #128C7E;
+}
+
+.card-foto-container {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Faz a foto preencher o espaço sem achatar */
+}
+
+.status-animal {
+  background: #fff3cd; /* Um amarelinho suave para dar destaque */
+  padding: 5px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin: 10px 0;
+  border-left: 4px solid #ffecb5;
+}
+
+.main-header {
+  background: white;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--cinza-borda);
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  position: sticky; /* Opcional: faz o menu seguir o scroll */
+  top: 0;
+  z-index: 90;
+}
+
+.nome-da-pagina {
+  margin: 0; /* Remove a margem grande que tínhamos antes */
+  font-size: 1.8rem;
+  color: var(--preto-maximo);
+}
+
+.nav-filtros {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nav-filtros button {
+  background: none;
+  border: 1px solid transparent;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--cinza-escuro);
+}
+
+.nav-filtros button:hover {
+  color: var(--preto-maximo);
+  background: #f0f0f0;
+}
+
+/* Estilo para o botão selecionado */
+.nav-filtros button.active {
+  background: var(--preto-maximo);
+  color: white;
+  border-color: var(--preto-maximo);
+}
+
+/* Ajuste no container para o header sticky não cobrir o conteúdo */
+.container {
+  padding-top: 0;
+}

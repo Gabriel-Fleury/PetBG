@@ -8,10 +8,11 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 
 function App() {
   const [animais, setAnimais] = useState([]);
-  const [filtro, setFiltro] = useState('todos'); // Estado para o Header
+  const [filtro, setFiltro] = useState('todos'); 
   const [modalAberto, setModalAberto] = useState(false);
   const [passo, setPasso] = useState(1);
-  const [carregando, setCarregando] = useState(false); // Feedback visual de envio
+  const [carregando, setCarregando] = useState(false); 
+  const [copiadoId, setCopiadoId] = useState(null); 
 
   const estadoInicial = {
     tipo: '', 
@@ -33,7 +34,7 @@ function App() {
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const listaAnimais = snapshot.docs.map(doc => ({
-        id: doc.id, // ID único gerado pelo Firebase
+        id: doc.id, 
         ...doc.data()
       }));
       setAnimais(listaAnimais);
@@ -41,7 +42,7 @@ function App() {
       console.error("Erro ao buscar dados do Firestore: ", error);
     });
 
-    return () => unsubscribe(); // Limpa o listener ao desmontar o componente
+    return () => unsubscribe(); 
   }, []);
 
   const selecionarTipo = (tipo) => {
@@ -56,39 +57,77 @@ function App() {
     setCarregando(false);
   };
 
+  // FUNÇÃO AUXILIAR: Formata o timestamp gerado pelo sistema
+  const formatarData = (timestamp) => {
+    if (!timestamp) return "";
+    const data = new Date(timestamp);
+    
+    // Formata no padrão brasileiro: DD/MM/AAAA às HH:MM
+    return data.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }) + ' às ' + data.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // COPIAR LINK DO ANÚNCIO
+  const copiarLinkAnuncio = (animal) => {
+    const urlBase = window.location.origin + window.location.pathname;
+    const linkCompleto = `${urlBase}?pet=${animal.id}`;
+    
+    const textoParaCopiar = `🚨 *PETBG BARRA DO GARÇAS* 🚨\n` +
+      `Status: *${animal.label}*\n` +
+      `${animal.tipo === 'encontrado' ? 'Animal Encontrado' : `Nome: *${animal.nomeAnimal}*`}\n` +
+      `Bairro: ${animal.bairro || 'Não informado'}\n\n` +
+      `Veja a foto e ajude compartilhando: ${linkCompleto}`;
+
+    navigator.clipboard.writeText(textoParaCopiar).then(() => {
+      setCopiadoId(animal.id);
+      setTimeout(() => {
+        setCopiadoId(null);
+      }, 2000);
+    }).catch((erro) => {
+      console.error("Erro ao copiar link: ", erro);
+      alert("Não foi possível copiar automaticamente.");
+    });
+  };
+
   // ADICIONAR REGISTRO: Upload da foto + Salvamento dos dados
   const salvarAnimal = async (e) => {
     e.preventDefault();
     if (!novoPet.foto) return alert("Por favor, selecione uma foto.");
     
+    if ((novoPet.tipo === 'perdido' || novoPet.tipo === 'encontrado') && !novoPet.bairro) {
+      return alert("Por favor, preencha o campo Bairro.");
+    }
+
     setCarregando(true);
 
     try {
-      // 1. Upload da imagem para o Firebase Storage
       const nomeArquivo = `${Date.now()}_${novoPet.foto.name}`;
       const storageRef = ref(storage, `pets/${nomeArquivo}`);
       
       const snapshot = await uploadBytes(storageRef, novoPet.foto);
       const fotoUrlPublica = await getDownloadURL(snapshot.ref);
 
-      // 2. Preparação do objeto para o Firestore
       const animalCompleto = {
         tipo: novoPet.tipo,
         nomePessoa: novoPet.nomePessoa,
         nomeAnimal: novoPet.tipo === 'encontrado' ? '' : novoPet.nomeAnimal,
         porte: novoPet.porte,
         contato: novoPet.contato,
-        bairro: novoPet.bairro || '',
-        pontoReferencia: novoPet.pontoReferencia || '',
-        estadoAnimal: novoPet.estadoAnimal || '',
-        fotoUrl: fotoUrlPublica, // URL final vinda do Storage
+        bairro: novoPet.tipo !== 'doacao' ? novoPet.bairro : '',
+        pontoReferencia: novoPet.tipo !== 'doacao' ? novoPet.pontoReferencia : '',
+        estadoAnimal: novoPet.tipo === 'encontrado' ? novoPet.estadoAnimal : '',
+        fotoUrl: fotoUrlPublica, 
         label: novoPet.tipo === 'doacao' ? 'Adoção' : novoPet.tipo.charAt(0).toUpperCase() + novoPet.tipo.slice(1),
-        criadoEm: Date.now() // Carimbo de data para ordenação
+        criadoEm: Date.now() // Captura o horário exato do servidor/máquina de forma oculta
       };
 
-      // 3. Salva o documento na coleção "animais"
       await addDoc(collection(db, 'animais'), animalCompleto);
-      
       fecharModal();
     } catch (erro) {
       console.error("Erro ao publicar anúncio: ", erro);
@@ -97,38 +136,32 @@ function App() {
     }
   };
 
-  // EXCLUSÃO MANUAL COM VALIDAÇÃO DE SENHA
+  // EXCLUSÃO MANUAL COM VALIDAÇÃO DE SENHA (Vite)
   const deletarAnimal = async (id, fotoUrl) => {
-    // 1. Pede a senha do administrador antes de prosseguir
     const senhaDigitada = window.prompt("Digite a senha de administrador para excluir este anúncio:");
-    
-    // Altere 'petbg2026' para a senha secreta que você preferir usar no site
-    if (senhaDigitada !== 'admin123') {
+    const SENHA_ADMIN = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+
+    if (senhaDigitada !== SENHA_ADMIN) {
       alert("Senha incorreta! Você não tem autorização para excluir.");
       return;
     }
 
-    const confirmar = window.confirm("Senha correta. Tem certeza que deseja remover este anúncio permanentemente do PetBG?");
+    const confirmar = window.confirm("Tem certeza que deseja remover este anúncio permanentemente?");
     if (!confirmar) return;
 
     try {
-      // 1. Remove do banco de dados (Firestore)
       await deleteDoc(doc(db, "animais", id));
-
-      // 2. Remove o arquivo de imagem correspondente (Storage)
       if (fotoUrl) {
         const referenciaFoto = ref(storage, fotoUrl);
         await deleteObject(referenciaFoto);
       }
-
       alert("Anúncio removido com sucesso!");
     } catch (erro) {
       console.error("Erro ao deletar o anúncio:", erro);
-      alert("Não foi possível excluir o anúncio. Tente novamente.");
+      alert("Não foi possível excluir o anúncio.");
     }
   };
 
-  // Lógica de Filtragem de abas
   const animaisFiltrados = animais.filter(animal => 
     filtro === 'todos' || animal.tipo === filtro
   );
@@ -155,7 +188,6 @@ function App() {
         {animaisFiltrados.map((animal) => (
           <div key={animal.id} className={`card card-${animal.tipo}`}>
             
-            {/* O botão "X" fica visível para todos, mas protegido pela senha */}
             <button 
               className="btn-deletar-admin" 
               onClick={() => deletarAnimal(animal.id, animal.fotoUrl)}
@@ -183,17 +215,35 @@ function App() {
               )}
               
               {animal.bairro && (
-                <p className="local-info">📍 {animal.bairro} <br/> <small>Ref: {animal.pontoReferencia}</small></p>
+                <p className="local-info">
+                  📍 {animal.bairro} 
+                  {animal.pontoReferencia && <><br/><small>Ref: {animal.pontoReferencia}</small></>}
+                </p>
               )}
 
-              <a 
-                href={`https://wa.me/55${animal.contato.replace(/\D/g, '')}?text=Olá! Vi o anúncio no PetBG e gostaria de informações.`}
-                target="_blank" 
-                rel="noreferrer"
-                className="btn-whatsapp"
-              >
-                Entrar em contato
-              </a>
+              {/* DATA E HORA DO POST (Gerado automaticamente pelo sistema) */}
+              <p className="post-data">
+                📅 {formatarData(animal.criadoEm)}
+              </p>
+
+              {/* CONTAINER DE BOTÕES DE AÇÃO */}
+              <div className="card-botoes-container">
+                <a 
+                  href={`https://wa.me/55${animal.contato.replace(/\D/g, '')}?text=Olá! Vi o anúncio no PetBG e gostaria de informações.`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="btn-whatsapp"
+                >
+                  Entrar em contato
+                </a>
+
+                <button 
+                  onClick={() => copiarLinkAnuncio(animal)} 
+                  className={`btn-copiar ${copiadoId === animal.id ? 'sucesso' : ''}`}
+                >
+                  {copiadoId === animal.id ? '✨ Link Copiado!' : '🔗 Copiar Link para Stories'}
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -269,8 +319,8 @@ function App() {
                   <div className="area-local">
                     <p className="aviso-local">*{novoPet.tipo === 'perdido' ? 'Último local visto' : 'Local que encontrei'}*</p>
                     <div className="row">
-                      <input placeholder="Bairro *" value={novoPet.bairro} onChange={(e) => setNovoPet({...novoPet, bairro: e.target.value})} required disabled={carregando} />
-                      <input placeholder="Referência *" value={novoPet.pontoReferencia} onChange={(e) => setNovoPet({...novoPet, pontoReferencia: e.target.value})} required disabled={carregando} />
+                      <input placeholder="Bairro *" value={novoPet.bairro} onChange={(e) => setNovoPet({...novoPet, bairro: e.target.value})} disabled={carregando} />
+                      <input placeholder="Referência" value={novoPet.pontoReferencia} onChange={(e) => setNovoPet({...novoPet, pontoReferencia: e.target.value})} disabled={carregando} />
                     </div>
                   </div>
                 )}

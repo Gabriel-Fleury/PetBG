@@ -1,221 +1,254 @@
-/* ==========================================================================
-   1. VARIÁVEIS DE DESIGN (DESIGN SYSTEM)
-   ========================================================================== */
+/* =========================================
+   VARIÁVEIS DE CORES (SUA PALETA)
+   ========================================= */
 :root {
-  --bg-principal: #f4f7f6;
-  --bg-card: #ffffff;
-  --texto-escuro: #1c2421;
-  --texto-mutado: #50635c;
-  
-  /* Cores Principais Identitárias */
-  --cor-marca: #134A3A;         /* Verde Profundo */
-  --cor-marca-hover: #0b2d23;
-  --cor-destaque: #EABF4E;      /* Amarelo Ouro */
-  --cor-destaque-hover: #d1a636;
-  
-  --whatsapp: #25d366;
-  --whatsapp-hover: #1ebd58;
-  
-  /* Cores por Categoria (Para Linhas de Topo e Tags) */
-  --cor-perdido: #d32f2f;
-  --bg-perdido: #ffebee;
-  
-  --cor-encontrado: #2e7d32;
-  --bg-encontrado: #e8f5e9;
-  
-  --cor-doacao: #8f6d05;        /* Tom escuro do amarelo para leitura */
-  --bg-doacao: #fffde7;         /* Fundo do Amarelo Ouro suave */
+  --preto: #000000;
 
-  /* Efeitos e Sombras */
-  --sombra-suave: 0 4px 20px rgba(19, 74, 58, 0.05);
-  --sombra-card-hover: 0 12px 30px rgba(19, 74, 58, 0.15);
-  --transicao-padrao: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --cinza-1: #efefef;
+  --cinza-2: #7f7f7f;
+  --cinza-bg: #f7f7f7;
+  --cinza-fume: #d9d9d9;
+  --cinza-nav: rgba(2, 27, 0, 0.15);
+
+  --verde-1: #E4FFDB;
+  --verde-2: #7BD45D;
+  --verde-3: #48AA28;
+  --verde-4: #124B3A;
+  --verde-5: #093326;
+  --verde-6: #052A1F;
+
+  --red-1: #EDDADA;
+  --red-2: #7C0000;
+  --red-3: #5F0000;
+  --red-4: #3D0000; /* NOVO: tom mais escuro, para dar consistência com as outras paletas (verde/amarelo têm 4+ tons) */
+
+  --amarelo-1: #FFF0C5;
+  --amarelo-2: #FFB703;
+  --amarelo-3: #CA9000;
+  --amarelo-4: #573E00;
+
+  /* Auxiliares de Estrutura */
+  --branco: #ffffff;
   --raio-borda: 16px;
+  --sombra-card: 0 4px 6px -1px var(--cinza-nav);
+  --sombra-hover: 0 10px 15px -3px var(--cinza-nav);
 }
 
-/* ==========================================================================
-   2. CONFIGURAÇÕES GERAIS E ESTRUTURA
-   ========================================================================== */
+/* =========================================
+   RESET GERAL
+   ========================================= */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-principal);
-  color: var(--texto-escuro);
+  background-color: var(--cinza-bg);
+  color: var(--verde-6);
   -webkit-font-smoothing: antialiased;
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 16px 100px 16px;
-}
-
-/* ==========================================================================
-   3. HEADER COM LOGO EM FUNDO AMARELO E FILTROS
-   ========================================================================== */
-.main-header {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* NOVO: acessibilidade — respeita quem prefere menos movimento na tela */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* NOVO: foco visível consistente para navegação por teclado */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--verde-3);
+  outline-offset: 2px;
+}
+
+/* =========================================
+   HEADER & NAVEGAÇÃO
+   ========================================= */
+.main-header {
+  background-color: var(--branco);
+  padding: 1.5rem 5%;
+  box-shadow: 0 2px 10px var(--cinza-nav);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 48px;
-  text-align: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .nome-da-pagina {
-  font-size: 2.6rem;
-  font-weight: 900;
-  color: var(--cor-marca);
-  letter-spacing: -1.5px;
-  background-color: var(--cor-destaque);
-  padding: 6px 28px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(234, 191, 78, 0.25);
-  display: inline-block;
+  font-size: clamp(1.4rem, 4vw, 1.8rem); /* ALTERADO: fluido em vez de fixo */
+  font-weight: 800;
+  color: var(--verde-4);
+  letter-spacing: -0.5px;
+}
+
+/* NOVO: corrige o bug — a logo (usada no header e no footer) não tinha
+   nenhuma regra de tamanho. Sem isso, o SVG podia aparecer gigante ou
+   distorcido dependendo do viewBox do arquivo. */
+.logo-site {
+  height: 40px;
+  width: auto;
+  display: block;
 }
 
 .nav-filtros {
   display: flex;
-  background-color: rgba(19, 74, 58, 0.06);
-  padding: 6px;
-  border-radius: 30px;
-  gap: 4px;
-  overflow-x: auto;
-  max-width: 100%;
-  white-space: nowrap;
-  border: 1px solid rgba(19, 74, 58, 0.04);
-}
-
-.nav-filtros::-webkit-scrollbar {
-  display: none;
-}
-.nav-filtros {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .nav-filtros button {
-  background: none;
-  border: none;
-  padding: 10px 22px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--texto-mutado);
-  border-radius: 20px;
+  background-color: transparent;
+  border: 2px solid var(--cinza-fume);
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
   cursor: pointer;
-  transition: var(--transicao-padrao);
+  font-weight: 600;
+  color: var(--cinza-2);
+  transition: all 0.2s ease;
 }
 
 .nav-filtros button:hover {
-  color: var(--cor-marca);
+  border-color: var(--verde-3);
+  color: var(--verde-4);
 }
 
 .nav-filtros button.active {
-  background-color: var(--bg-card);
-  color: var(--cor-marca);
-  box-shadow: 0 4px 10px rgba(19, 74, 58, 0.08);
+  background-color: var(--verde-4);
+  border-color: var(--verde-4);
+  color: var(--verde-1);
 }
 
-/* ==========================================================================
-   4. LAYOUT DA GRADE (CARDS)
-   ========================================================================== */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
+/* NOVO: barra de sessão do administrador (usada no header quando logado) */
+.admin-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--verde-5);
+  background-color: var(--verde-1);
+  padding: 0.4rem 0.9rem;
+  border-radius: 30px;
 }
+
+.btn-logout {
+  background: transparent;
+  border: 1.5px solid var(--verde-4);
+  color: var(--verde-4);
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background-color: var(--verde-4);
+  color: var(--verde-1);
+}
+
+/* =========================================
+   GRID DE ANÚNCIOS (Catálogo)
+   ========================================= */
+.grid-container {
+  flex: 1;
+  padding: 3rem 5%;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 600px) { .grid-container { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .grid-container { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1200px) { .grid-container { grid-template-columns: repeat(4, 1fr); } }
 
 .msg-vazio {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 60px 20px;
-  color: var(--texto-mutado);
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  color: var(--cinza-2);
+  padding: 3rem;
 }
 
-/* ==========================================================================
-   5. ANATOMIA DO CARD (COM LINHA COLORIDA NO TOPO)
-   ========================================================================== */
+/* =========================================
+   CARDS DE ANIMAIS
+   ========================================= */
 .card {
-  background-color: var(--bg-card);
+  background-color: var(--branco);
   border-radius: var(--raio-borda);
-  border: 1px solid rgba(19, 74, 58, 0.08);
+  box-shadow: var(--sombra-card);
   overflow: hidden;
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--sombra-suave);
-  transition: var(--transicao-padrao);
-  
-  /* Espaço reservado para a linha indicadora no topo */
-  border-top: 5px solid transparent; 
 }
-
-/* Aplicação dinâmica da cor da linha superior baseado na categoria */
-.card-perdido { border-top-color: var(--cor-perdido); }
-.card-encontrado { border-top-color: var(--cor-encontrado); }
-.card-doacao { border-top-color: var(--cor-destaque); } /* Linha superior Amarela */
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--sombra-card-hover);
+  transform: translateY(-5px);
+  box-shadow: var(--sombra-hover);
 }
 
-/* Botão Admin Delete */
+/* Identidade visual por tipo */
+.card-doacao { border-top: 5px solid var(--verde-3); }
+.card-perdido { border-top: 5px solid var(--red-2); }
+.card-encontrado { border-top: 5px solid var(--amarelo-2); }
+
+/* Botão Admin (Deletar) */
 .btn-deletar-admin {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--red-2);
+  border: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: none;
-  color: var(--texto-escuro);
-  font-size: 20px;
+  font-size: 1.2rem;
   line-height: 1;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  backdrop-filter: blur(4px);
-  transition: var(--transicao-padrao);
-  opacity: 0.5;
+  z-index: 10;
+  box-shadow: 0 2px 5px var(--cinza-nav);
+  transition: background 0.2s;
 }
-
-.card:hover .btn-deletar-admin {
-  opacity: 1;
-}
-
 .btn-deletar-admin:hover {
-  background-color: var(--cor-perdido);
-  color: #fff;
+  background-color: var(--red-2);
+  color: var(--red-1);
 }
 
-/* Imagem do Pet */
+/* Foto do Card */
 .card-foto-container {
   width: 100%;
-  height: 230px;
-  background-color: #eef2f1;
+  height: 220px;
+  background-color: var(--cinza-1);
   position: relative;
-  overflow: hidden;
 }
 
 .card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.card:hover .card-img {
-  transform: scale(1.03);
 }
 
 .card-foto-placeholder {
@@ -224,352 +257,399 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--texto-mutado);
+  color: var(--cinza-2);
   font-weight: 500;
 }
 
-/* Bloco de Informações Internas */
+/* Conteúdo do Card */
 .card-content {
-  padding: 20px;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  gap: 12px;
+  flex: 1;
 }
 
-/* Tags de Status Modificadas */
 .tag {
-  align-self: flex-start;
-  padding: 4px 12px;
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-radius: 6px;
+  margin-bottom: 0.8rem;
+  align-self: flex-start;
 }
 
-.card-perdido .tag { background-color: var(--bg-perdido); color: var(--cor-perdido); }
-.card-encontrado .tag { background-color: var(--bg-encontrado); color: var(--cor-encontrado); }
-.card-doacao .tag { background-color: var(--bg-doacao); color: var(--cor-doacao); } /* Tag Amarela */
+.card-doacao .tag { background-color: var(--verde-1); color: var(--verde-5); }
+.card-perdido .tag { background-color: var(--red-1); color: var(--red-3); }
+.card-encontrado .tag { background-color: var(--amarelo-1); color: var(--amarelo-4); }
 
 .card-content h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--texto-escuro);
-  line-height: 1.2;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  color: var(--verde-6);
 }
 
 .card-content p {
-  font-size: 0.95rem;
-  color: var(--texto-escuro);
+  font-size: 0.9rem;
+  color: var(--cinza-2);
+  margin-bottom: 0.4rem;
 }
 
-.card-content p strong {
-  color: var(--texto-mutado);
-  font-weight: 600;
-}
-
-/* Caixa de Estado de Saúde */
-.status-animal {
-  background: #fffde7;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border-left: 4px solid var(--cor-destaque);
-  font-size: 0.9rem !important;
-}
+.status-animal { font-style: italic; }
 
 .local-info {
-  font-size: 0.9rem !important;
-  color: var(--texto-mutado) !important;
-  line-height: 1.4;
+  background-color: var(--cinza-bg);
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  border: 1px solid var(--cinza-fume);
+  color: var(--preto);
 }
 
-/* Rodapé do Card com Horário */
 .post-data {
-  font-size: 0.8rem;
-  color: var(--texto-mutado);
-  margin-top: auto; 
-  padding-top: 12px;
-  border-top: 1px dashed rgba(19, 74, 58, 0.12);
+  font-size: 0.8rem !important;
+  color: var(--cinza-2) !important;
+  margin-top: auto;
+  padding-top: 1rem;
 }
 
-/* Botões de Ação */
+/* Botões do Card */
 .card-botoes-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 0.5rem;
+  margin-top: 1.2rem;
 }
 
 .btn-whatsapp {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--whatsapp);
-  color: white;
+  background-color: var(--verde-3);
+  color: var(--branco);
+  text-align: center;
+  padding: 0.8rem;
+  border-radius: 8px;
   text-decoration: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  transition: var(--transicao-padrao);
+  font-weight: 600;
+  transition: background 0.2s;
 }
-
-.btn-whatsapp:hover {
-  background-color: var(--whatsapp-hover);
-}
+.btn-whatsapp:hover { background-color: var(--verde-4); }
 
 .btn-copiar {
-  background-color: rgba(19, 74, 58, 0.05);
-  border: 1px solid rgba(19, 74, 58, 0.08);
-  color: var(--cor-marca);
-  padding: 11px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.85rem;
+  background-color: var(--cinza-bg);
+  color: var(--verde-6);
+  border: 1px solid var(--cinza-fume);
+  padding: 0.8rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: var(--transicao-padrao);
+  font-weight: 600;
+  transition: all 0.2s;
 }
-
-.btn-copiar:hover {
-  background-color: rgba(19, 74, 58, 0.09);
-}
-
-/* Feedback Dourado Claro Legível ao Copiar */
+.btn-copiar:hover { background-color: var(--cinza-1); }
 .btn-copiar.sucesso {
-  background-color: var(--bg-doacao);
-  border-color: var(--cor-destaque);
-  color: var(--cor-doacao);
+  background-color: var(--verde-4);
+  color: var(--verde-1);
+  border-color: var(--verde-5);
 }
 
-/* ==========================================================================
-   6. BOTÃO FLUTUANTE (FAB)
-   ========================================================================== */
+/* =========================================
+   FOOTER
+   ========================================= */
+.main-footer {
+  background-color: var(--verde-6);
+  color: var(--cinza-1);
+  padding: 4rem 5% 2rem;
+  margin-top: auto;
+  border-top: 4px solid var(--verde-2);
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 3rem;
+  max-width: 1200px;
+  margin: 0 auto 3rem auto;
+}
+
+.branding p {
+  margin-top: 15px;
+  color: var(--cinza-fume);
+  line-height: 1.7;
+  max-width: 350px;
+}
+
+.footer-col h4 {
+  font-size: 1.2rem;
+  margin-bottom: 1.2rem;
+  color: var(--amarelo-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-col ul li { margin-bottom: 0.8rem; }
+
+.footer-col a {
+  color: var(--cinza-1);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer-col a:hover {
+  color: var(--verde-1);
+  padding-left: 5px;
+}
+
+/* ALTERADO: trocamos opacity por uma cor sólida — texto com opacity reduzida
+   e fonte pequena (0.85rem) fica com contraste ruim para quem tem baixa
+   visão. Agora usa um cinza claro fixo, que mantém contraste adequado sobre
+   o fundo verde escuro do rodapé. */
+.link-admin {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--cinza-fume);
+}
+
+.link-admin:hover {
+  color: var(--red-1) !important;
+}
+
+/* NOVO: botão "Área do Administrador" / "Sair da Área do Administrador"
+   no rodapé — antes era um <a>, agora é um <button>, então precisa
+   resetar a aparência padrão de botão do navegador. */
+.link-admin-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.link-admin-btn:hover {
+  text-decoration: underline;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 2rem;
+  border-top: 1px solid var(--verde-5);
+  color: var(--cinza-fume);
+  font-size: 0.85rem;
+}
+
+/* Container que agrupa as colunas de links */
+.footer-links-wrapper {
+  display: flex;
+  gap: 3rem;
+  justify-content: flex-start;
+  flex-wrap: wrap; /* NOVO: evita que as colunas espremam ou vazem em telas muito estreitas */
+}
+
+.footer-col {
+  min-width: 120px;
+}
+
+/* =========================================
+   FAB (Botão Flutuante) & MODAL
+   ========================================= */
 .fab {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 2rem;
+  right: 2rem;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: var(--cor-marca);
-  color: white;
+  background-color: var(--verde-4);
+  color: var(--verde-1);
+  font-size: 2.5rem;
   border: none;
-  font-size: 32px;
   cursor: pointer;
+  box-shadow: 0 4px 15px var(--cinza-nav);
+  transition: transform 0.2s ease;
+  z-index: 90;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(19, 74, 58, 0.3);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 99;
+  line-height: 0;
 }
+.fab:hover { transform: scale(1.1); background-color: var(--verde-5); }
 
-.fab:hover {
-  background-color: var(--cor-marca-hover);
-  transform: scale(1.1) rotate(90deg);
-}
-
-/* ==========================================================================
-   7. MODAL DE CADASTRO
-   ========================================================================== */
 .overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(28, 36, 33, 0.6);
-  backdrop-filter: blur(6px);
+  width: 100%;
+  height: 100%;
+  background-color: var(--cinza-nav);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  padding: 16px;
-  animation: fadeIn 0.2s ease-out;
+  padding: 1rem;
 }
 
 .modal-card {
-  background-color: var(--bg-card);
+  background-color: var(--branco);
   width: 100%;
   max-width: 500px;
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: var(--raio-borda);
+  padding: 2.5rem 2rem;
   position: relative;
-  box-shadow: 0 20px 40px rgba(19, 74, 58, 0.15);
   max-height: 90vh;
   overflow-y: auto;
-  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 25px 50px -12px var(--cinza-nav);
 }
 
 .btn-fechar {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 1rem;
+  right: 1.5rem;
   background: none;
   border: none;
-  font-size: 28px;
-  color: var(--texto-mutado);
+  font-size: 2rem;
+  color: var(--cinza-2);
   cursor: pointer;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transicao-padrao);
 }
+.btn-fechar:hover { color: var(--preto); }
 
-.btn-fechar:hover {
-  background-color: rgba(19, 74, 58, 0.08);
-}
-
-/* Passo 1 */
-.selecao-tipo h2 {
-  font-size: 1.5rem;
-  margin-bottom: 24px;
-  color: var(--cor-marca);
+/* Passos do Modal */
+.selecao-tipo h2, .form-modal h2 {
+  margin-bottom: 1.5rem;
+  color: var(--verde-6);
+  text-align: center;
 }
 
 .btn-tipo {
   display: block;
   width: 100%;
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
   border-radius: 12px;
-  border: 1px solid rgba(19, 74, 58, 0.12);
-  background-color: var(--bg-principal);
-  font-size: 1rem;
-  font-weight: 700;
-  text-align: left;
+  border: 2px solid transparent;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transicao-padrao);
-  color: var(--cor-marca);
+  transition: all 0.2s;
 }
 
-.btn-tipo:hover {
-  transform: translateX(4px);
-  background-color: #fff;
-  border-color: var(--cor-destaque);
-}
+.btn-tipo.perdido { background-color: var(--red-1); color: var(--red-3); border-color: var(--red-2); }
+.btn-tipo.perdido:hover { background-color: var(--branco); color: var(--red-2); }
 
-/* Passo 2: Formulário Inputs */
+.btn-tipo.encontrado { background-color: var(--amarelo-1); color: var(--amarelo-4); border-color: var(--amarelo-2); }
+.btn-tipo.encontrado:hover { background-color: var(--branco); color: var(--amarelo-3); }
+
+.btn-tipo.doacao { background-color: var(--verde-1); color: var(--verde-5); border-color: var(--verde-3); }
+.btn-tipo.doacao:hover { background-color: var(--branco); color: var(--verde-4); }
+
+/* Formulário */
 .form-modal {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1rem;
 }
 
-.form-modal h2 {
-  font-size: 1.5rem;
-  color: var(--cor-marca);
-}
-
-.form-modal input, 
-.form-modal select, 
-.form-modal textarea {
+.form-modal input, .form-modal select, .form-modal textarea {
   width: 100%;
-  padding: 12px 16px;
-  border: 1.5px solid rgba(19, 74, 58, 0.18);
-  border-radius: 10px;
-  font-size: 0.95rem;
-  background-color: #fff;
-  color: var(--texto-escuro);
-  transition: var(--transicao-padrao);
-}
-
-.form-modal input:focus, 
-.form-modal select:focus, 
-.form-modal textarea:focus {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--cinza-fume);
+  border-radius: 8px;
+  font-size: 1rem;
   outline: none;
-  border-color: var(--cor-marca);
-  box-shadow: 0 0 0 4px rgba(19, 74, 58, 0.1);
+  background-color: var(--branco);
+  color: var(--preto);
+  transition: border-color 0.2s;
 }
 
-.campo-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.form-modal input:focus, .form-modal select:focus, .form-modal textarea:focus {
+  border-color: var(--verde-3);
+  box-shadow: 0 0 0 3px var(--verde-1);
 }
 
-.campo-group label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--texto-mutado);
+.form-modal textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .label-foto {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--cor-marca);
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--verde-5);
 }
 
 .label-foto input[type="file"] {
-  padding: 10px;
-  background-color: var(--bg-principal);
-  border: 1px dashed rgba(19, 74, 58, 0.3);
+  padding: 0.5rem 0;
+  border: none;
+}
+
+.campo-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--verde-6);
 }
 
 .area-local {
-  background-color: var(--bg-principal);
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(19, 74, 58, 0.08);
+  background-color: var(--cinza-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px dashed var(--cinza-fume);
 }
 
 .aviso-local {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--cor-marca);
-  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--cinza-2);
+  margin-bottom: 0.5rem;
+  text-align: center;
+  font-weight: 600;
 }
 
 .row {
   display: flex;
-  gap: 10px;
+  gap: 0.5rem;
 }
 
-/* Botão de Enviar em Amarelo com Texto Escuro (Fácil Leitura) */
 .btn-enviar {
-  background-color: var(--cor-destaque);
-  color: #1c2421; 
+  background-color: var(--verde-4);
+  color: var(--verde-1);
+  padding: 1rem;
   border: none;
-  padding: 14px;
-  border-radius: 10px;
+  border-radius: 8px;
+  font-size: 1.1rem;
   font-weight: 700;
-  font-size: 1rem;
   cursor: pointer;
-  transition: var(--transicao-padrao);
-  margin-top: 8px;
+  margin-top: 1rem;
+  transition: background 0.2s;
 }
-
-.btn-enviar:hover {
-  background-color: var(--cor-destaque-hover);
-}
-
-.btn-enviar:disabled {
-  background-color: var(--texto-mutado);
-  opacity: 0.6;
-}
+.btn-enviar:hover:not(:disabled) { background-color: var(--verde-5); }
+.btn-enviar:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .btn-voltar {
   background: none;
   border: none;
-  color: var(--texto-mutado);
+  color: var(--cinza-2);
   font-weight: 600;
-  font-size: 0.9rem;
   cursor: pointer;
-  align-self: center;
+  padding: 0.5rem;
+}
+.btn-voltar:hover { text-decoration: underline; color: var(--preto); }
+
+/* NOVO: mensagem de erro no modal de login do administrador */
+.erro-login {
+  color: var(--red-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
 }
 
-/* Animations */
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-@media (max-width: 480px) {
-  .modal-card { padding: 24px 16px; }
-  .row { flex-direction: column; }
+/* NOVO: pequeno ajuste no modal de login para não ficar idêntico ao modal
+   de cadastro (largura um pouco menor, já que tem menos campos) */
+.modal-login {
+  max-width: 380px;
 }

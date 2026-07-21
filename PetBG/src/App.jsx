@@ -13,22 +13,27 @@ import {
 } from 'firebase/auth'; // NOVO
 
 function App() {
-  const [animais, setAnimais] = useState([]);
-  const [filtro, setFiltro] = useState('todos');
+  // --- Estados relacionados aos anúncios (cards) ---
+  const [animais, setAnimais] = useState([]); // lista completa vinda do Firestore
+  const [filtro, setFiltro] = useState('todos'); // filtro ativo no header: todos/doacao/perdido/encontrado
+  const [carregandoLista, setCarregandoLista] = useState(true); // true até o primeiro snapshot do Firestore chegar
+  const [copiadoId, setCopiadoId] = useState(null); // guarda o id do anúncio cujo link acabou de ser copiado (para trocar o texto do botão por "Link Copiado!" por 2s)
+
+  // --- Estados do modal de CADASTRO de novo anúncio ---
   const [modalAberto, setModalAberto] = useState(false);
-  const [passo, setPasso] = useState(1);
-  const [carregando, setCarregando] = useState(false);
-  const [carregandoLista, setCarregandoLista] = useState(true); // NOVO: loading inicial da lista
-  const [copiadoId, setCopiadoId] = useState(null);
+  const [passo, setPasso] = useState(1); // 1 = escolher tipo (perdido/encontrado/doação), 2 = formulário com os detalhes
+  const [carregando, setCarregando] = useState(false); // true durante o upload da foto + salvamento no Firestore (usado para desabilitar os campos e o botão de enviar)
 
   // --- NOVO: estado de autenticação do administrador ---
-  const [usuarioAdmin, setUsuarioAdmin] = useState(null); // null = deslogado
+  const [usuarioAdmin, setUsuarioAdmin] = useState(null); // null = deslogado; quando logado, guarda o objeto "user" do Firebase Auth
   const [modalLoginAberto, setModalLoginAberto] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginSenha, setLoginSenha] = useState('');
   const [erroLogin, setErroLogin] = useState('');
   const [carregandoLogin, setCarregandoLogin] = useState(false);
 
+  // Valores em branco usados para "resetar" o formulário de cadastro
+  // sempre que o modal é fechado ou um novo anúncio é publicado.
   const estadoInicial = {
     tipo: '',
     nomePessoa: '',
@@ -43,7 +48,10 @@ function App() {
 
   const [novoPet, setNovoPet] = useState(estadoInicial);
 
-  // BUSCA EM TEMPO REAL: Monitora a coleção "animais" ordenada pelos mais recentes
+  // BUSCA EM TEMPO REAL: Monitora a coleção "animais" ordenada pelos mais recentes.
+  // onSnapshot mantém uma "escuta" aberta — sempre que qualquer anúncio for
+  // criado/editado/excluído por qualquer pessoa, essa função roda de novo
+  // automaticamente e atualiza a tela sozinha, sem precisar dar F5.
   useEffect(() => {
     const q = query(collection(db, 'animais'), orderBy('criadoEm', 'desc'));
 
@@ -53,12 +61,14 @@ function App() {
         ...doc.data()
       }));
       setAnimais(listaAnimais);
-      setCarregandoLista(false);
+      setCarregandoLista(false); // já recebemos os dados (mesmo que a lista venha vazia), então some a mensagem de "Carregando..."
     }, (error) => {
       console.error("Erro ao buscar dados do Firestore: ", error);
       setCarregandoLista(false);
     });
 
+    // Função de "limpeza": encerra a escuta quando o componente desmonta,
+    // evitando vazamento de memória / atualizações desnecessárias.
     return () => unsubscribe();
   }, []);
 
@@ -67,16 +77,20 @@ function App() {
   // a interface reaja imediatamente (ex: escondendo os botões de excluir).
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      setUsuarioAdmin(user);
+      setUsuarioAdmin(user); // "user" vem null quando deslogado, ou um objeto com dados da conta quando logado
     });
     return () => unsubscribeAuth();
   }, []);
 
+  // Chamado ao clicar em um dos 3 botões do Passo 1 do modal de cadastro
+  // (Perdi um animal / Encontrei um animal / Colocar para adoção).
   const selecionarTipo = (tipo) => {
     setNovoPet({ ...novoPet, tipo });
-    setPasso(2);
+    setPasso(2); // avança para o formulário de detalhes
   };
 
+  // Fecha o modal de cadastro e restaura tudo ao estado inicial,
+  // para que a próxima vez que o usuário abrir o modal comece do zero.
   const fecharModal = () => {
     setModalAberto(false);
     setNovoPet(estadoInicial);
@@ -84,7 +98,8 @@ function App() {
     setCarregando(false);
   };
 
-  // FUNÇÃO AUXILIAR: Formata o timestamp gerado pelo sistema
+  // FUNÇÃO AUXILIAR: Formata o timestamp (número em milissegundos, vindo de
+  // Date.now()) para o padrão de data/hora brasileiro exibido nos cards.
   const formatarData = (timestamp) => {
     if (!timestamp) return "";
     const data = new Date(timestamp);
@@ -99,7 +114,9 @@ function App() {
     });
   };
 
-  // COPIAR LINK DO ANÚNCIO
+  // COPIAR LINK DO ANÚNCIO: monta um texto pronto (com emojis e formatação
+  // do WhatsApp) e copia para a área de transferência, para o usuário colar
+  // direto num Story ou grupo.
   const copiarLinkAnuncio = (animal) => {
     const urlBase = window.location.origin + window.location.pathname;
     const linkCompleto = `${urlBase}?pet=${animal.id}`;
@@ -113,7 +130,7 @@ function App() {
     navigator.clipboard.writeText(textoParaCopiar).then(() => {
       setCopiadoId(animal.id);
       setTimeout(() => {
-        setCopiadoId(null);
+        setCopiadoId(null); // depois de 2s, o botão volta ao texto normal
       }, 2000);
     }).catch((erro) => {
       console.error("Erro ao copiar link: ", erro);
@@ -121,7 +138,9 @@ function App() {
     });
   };
 
-  // ADICIONAR REGISTRO: Upload da foto + Salvamento dos dados
+  // ADICIONAR REGISTRO: Upload da foto + Salvamento dos dados.
+  // Ordem importa aqui: primeiro sobe a foto pro Storage, só depois grava
+  // o documento no Firestore (já com a URL pública da foto dentro dele).
   const salvarAnimal = async (e) => {
     e.preventDefault();
     if (!novoPet.foto) return alert("Por favor, selecione uma foto.");
@@ -138,6 +157,8 @@ function App() {
       return alert(`A imagem deve ter no máximo ${TAMANHO_MAXIMO_MB}MB.`);
     }
 
+    // Bairro só é obrigatório para "perdido"/"encontrado" — em doações
+    // esse campo é ignorado (ver mais abaixo, ao montar animalCompleto).
     if ((novoPet.tipo === 'perdido' || novoPet.tipo === 'encontrado') && !novoPet.bairro) {
       return alert("Por favor, preencha o campo Bairro.");
     }
@@ -145,12 +166,19 @@ function App() {
     setCarregando(true);
 
     try {
+      // Prefixamos o nome do arquivo com Date.now() para evitar que duas
+      // fotos com o mesmo nome original se sobrescrevam no Storage.
       const nomeArquivo = `${Date.now()}_${novoPet.foto.name}`;
       const storageRef = ref(storage, `pets/${nomeArquivo}`);
 
       const snapshot = await uploadBytes(storageRef, novoPet.foto);
       const fotoUrlPublica = await getDownloadURL(snapshot.ref);
 
+      // Monta o objeto final que vai pro Firestore. Alguns campos são
+      // "limpados" (viram string vazia) dependendo do tipo de anúncio,
+      // porque o mesmo formulário é reaproveitado para os 3 tipos:
+      // - "encontrado" não tem nome do animal (quem encontrou não sabe o nome)
+      // - "doacao" não tem bairro/ponto de referência (não é local de perda/achado)
       const animalCompleto = {
         tipo: novoPet.tipo,
         nomePessoa: novoPet.nomePessoa,
@@ -161,11 +189,15 @@ function App() {
         pontoReferencia: novoPet.tipo !== 'doacao' ? novoPet.pontoReferencia : '',
         estadoAnimal: novoPet.tipo === 'encontrado' ? novoPet.estadoAnimal : '',
         fotoUrl: fotoUrlPublica,
+        // "label" é o texto exibido na tag colorida do card (ex: "Perdido", "Adoção")
         label: novoPet.tipo === 'doacao' ? 'Adoção' : novoPet.tipo.charAt(0).toUpperCase() + novoPet.tipo.slice(1),
-        criadoEm: Date.now()
+        criadoEm: Date.now() // usado tanto para ordenar quanto para exibir a data no card
       };
 
       await addDoc(collection(db, 'animais'), animalCompleto);
+      // Não precisa atualizar o estado "animais" manualmente aqui — o
+      // onSnapshot lá em cima já vai detectar esse novo documento sozinho
+      // e atualizar a tela automaticamente.
       fecharModal();
     } catch (erro) {
       console.error("Erro ao publicar anúncio: ", erro);
@@ -177,8 +209,10 @@ function App() {
   // EXCLUSÃO: agora protegida por autenticação real do Firebase (não por senha no código).
   // O botão de excluir só aparece para quem estiver logado como admin (ver JSX abaixo),
   // e as Firestore/Storage Rules também bloqueiam a exclusão no backend caso alguém
-  // tente burlar a interface.
+  // tente burlar a interface (ex: chamando deleteDoc direto pelo console do navegador).
   const deletarAnimal = async (id, fotoUrl) => {
+    // Checagem extra no front-end, só para dar um alerta amigável — quem
+    // realmente impede a exclusão sem login são as Firestore Rules.
     if (!usuarioAdmin) {
       alert("Você precisa estar logado como administrador para excluir.");
       return;
@@ -189,6 +223,8 @@ function App() {
 
     try {
       await deleteDoc(doc(db, "animais", id));
+      // Também remove a foto do Storage, para não acumular arquivos órfãos
+      // (fotos de anúncios já excluídos, ocupando espaço à toa).
       if (fotoUrl) {
         const referenciaFoto = ref(storage, fotoUrl);
         await deleteObject(referenciaFoto);
@@ -208,11 +244,16 @@ function App() {
     setCarregandoLogin(true);
     try {
       await signInWithEmailAndPassword(auth, loginEmail, loginSenha);
+      // Não precisamos chamar setUsuarioAdmin manualmente aqui — o
+      // onAuthStateChanged (useEffect acima) já detecta o login e atualiza
+      // o estado sozinho.
       setModalLoginAberto(false);
       setLoginEmail('');
       setLoginSenha('');
     } catch (erro) {
       console.error("Erro no login:", erro);
+      // Mensagem genérica de propósito: não revela se o erro foi de e-mail
+      // inexistente ou senha errada, para não facilitar tentativa de acesso.
       setErroLogin("E-mail ou senha inválidos.");
     } finally {
       setCarregandoLogin(false);
@@ -221,8 +262,10 @@ function App() {
 
   const fazerLogout = async () => {
     await signOut(auth);
+    // De novo, o onAuthStateChanged cuida de atualizar usuarioAdmin para null.
   };
 
+  // Lista final exibida na tela, já filtrada pelo botão ativo no header.
   const animaisFiltrados = animais.filter(animal =>
     filtro === 'todos' || animal.tipo === filtro
   );
@@ -252,6 +295,8 @@ function App() {
 
       {/* GRADE DE ANÚNCIOS */}
       <main className="grid-container">
+        {/* Estado de carregamento inicial — evita mostrar "Nenhum anúncio
+            encontrado" por um instante antes dos dados chegarem do Firestore */}
         {carregandoLista && (
           <p className="msg-vazio">Carregando anúncios...</p>
         )}
@@ -285,6 +330,7 @@ function App() {
 
             <div className="card-content">
               <span className="tag">{animal.label}</span>
+              {/* "Animal Encontrado" não tem nome cadastrado, então mostra um título genérico */}
               <h3>{animal.tipo === 'encontrado' ? 'Animal Encontrado' : animal.nomeAnimal}</h3>
 
               <p><strong>Porte:</strong> {animal.porte}</p>
@@ -305,6 +351,9 @@ function App() {
               </p>
 
               <div className="card-botoes-container">
+                {/* Link direto pro WhatsApp já com uma mensagem padrão preenchida.
+                    replace(/\D/g, '') remove qualquer caractere que não seja número
+                    (parênteses, traço, espaço) do telefone digitado no cadastro. */}
                 <a
                   href={`https://wa.me/55${animal.contato.replace(/\D/g, '')}?text=Olá! Vi o anúncio no PetBG e gostaria de informações.`}
                   target="_blank"
@@ -350,7 +399,8 @@ function App() {
         <ul>
           <li><a href="#sobre">Sobre o Projeto</a></li>
           <li><a href="#privacidade">Privacidade</a></li>
-          {/* ALTERADO: agora abre o modal de login em vez de um link comum */}
+          {/* ALTERADO: agora abre o modal de login em vez de um link comum.
+              O texto do botão muda dependendo se o admin já está logado ou não. */}
           <li>
             {usuarioAdmin ? (
               <button className="link-admin link-admin-btn" onClick={fazerLogout}>
@@ -377,7 +427,8 @@ function App() {
       {/* BOTÃO FLUTUANTE PARA CADASTRAR */}
       <button className="fab" onClick={() => setModalAberto(true)} aria-label="Cadastrar novo anúncio">+</button>
 
-      {/* MODAL DE CADASTRO */}
+      {/* MODAL DE CADASTRO — tem 2 passos: (1) escolher o tipo de anúncio,
+          (2) preencher os detalhes. O passo atual é controlado pelo estado "passo". */}
       {modalAberto && (
         <div className="overlay">
           <div className="modal-card">
@@ -405,6 +456,8 @@ function App() {
                   />
                 </label>
 
+                {/* O placeholder muda conforme o tipo: quem "encontrou" preenche
+                    o próprio nome; quem perdeu/doa preenche o nome do dono. */}
                 <input
                   placeholder={novoPet.tipo === 'encontrado' ? "Seu Nome *" : "Nome da Pessoa *"}
                   value={novoPet.nomePessoa}
@@ -413,6 +466,8 @@ function App() {
                   disabled={carregando}
                 />
 
+                {/* Campo "Nome do Animal" só aparece quando não é um anúncio de
+                    "encontrado" (quem encontra não sabe o nome do animal) */}
                 {novoPet.tipo !== 'encontrado' && (
                   <input
                     placeholder="Nome do Animal *"
@@ -440,6 +495,8 @@ function App() {
                   disabled={carregando}
                 />
 
+                {/* Campos de localização só fazem sentido para pets
+                    perdidos/encontrados — doação não precisa disso */}
                 {(novoPet.tipo === 'perdido' || novoPet.tipo === 'encontrado') && (
                   <div className="area-local">
                     <p className="aviso-local">*{novoPet.tipo === 'perdido' ? 'Último local visto' : 'Local que encontrei'}*</p>
@@ -450,6 +507,8 @@ function App() {
                   </div>
                 )}
 
+                {/* Campo "Estado do animal" só aparece para quem encontrou um pet
+                    (útil pra avisar se está ferido, assustado, etc.) */}
                 {novoPet.tipo === 'encontrado' && (
                   <textarea
                     placeholder="Estado do animal (Ex: ferido, dócil, assustado...) *"
@@ -471,7 +530,8 @@ function App() {
 
       )}
 
-      {/* NOVO: MODAL DE LOGIN DO ADMINISTRADOR */}
+      {/* NOVO: MODAL DE LOGIN DO ADMINISTRADOR — separado do modal de
+          cadastro, aberto pelo link "Área do Administrador" no rodapé */}
       {modalLoginAberto && (
         <div className="overlay">
           <div className="modal-card modal-login">
